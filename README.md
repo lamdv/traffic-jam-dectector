@@ -1,1 +1,1 @@
-# traffic-jam-dectector
+# traffic-jam-detector
