@@ -1,7 +1,5 @@
 package com.example.jiji.dataacquisition.Model;
 
-import android.support.annotation.Nullable;
-
 import java.sql.Timestamp;
 import java.text.DateFormat;
 import java.util.Date;
