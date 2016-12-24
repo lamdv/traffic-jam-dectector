@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">DataAcquisition</string>
+    <string name="unit">"m/s2"</string>
+    <string name="x">" X : "</string>
+    <string name="y">" Y : "</string>
+    <string name="z">" Z : "</string>
+    <string name="string4">"Record Readings"</string>
 </resources>
