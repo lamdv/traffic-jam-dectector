@@ -110,9 +110,8 @@ public class MainActivity extends Activity {
 
     private void startRecording() {
         // Prepare data storage
-        File directory = Environment
-                .getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
-        String name = "AllData_" + System.currentTimeMillis() + ".csv";
+        File directory = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS);
+        String name = "GyroData_" + System.currentTimeMillis() + ".csv";
         File filename = new File(directory, name);
         try {
             file = new BufferedWriter(new FileWriter(filename));
@@ -186,18 +185,6 @@ public class MainActivity extends Activity {
             array[i] = Float.toString(values[i]);
         }
         write(tag, array);
-    }
-
-    private void write(String tag, double[] values) {
-        String[] array = new String[values.length];
-        for (int i = 0; i < values.length; i++) {
-            array[i] = Double.toString(values[i]);
-        }
-        write(tag, array);
-    }
-
-    private void write(String tag) {
-        write(tag, (String[]) null);
     }
 
     /*@Override
