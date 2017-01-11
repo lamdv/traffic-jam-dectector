@@ -1,16 +1,23 @@
 package com.example.jiji.dataacquisition;
 
+import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.location.Address;
 import android.location.Geocoder;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.Environment;
+import android.support.v4.app.ActivityCompat;
 import android.util.Log;
+import android.view.Menu;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -29,24 +36,21 @@ public class MainActivity extends Activity {
     private final String TAG = MainActivity.class.getSimpleName();
     private SensorManager sensorManager;
     private BufferedWriter file;
-    private Map<Integer, String> sensorTypes = new HashMap<>();
-    private Map<Integer, Sensor> sensors = new HashMap<>();
+    private LocationManager locationManager;
+    private Map<Integer, String> sensorTypes = new HashMap<Integer, String>();
+    private Map<Integer, Sensor> sensors = new HashMap<Integer, Sensor>();
     private TextView filenameDisplay;
     private TextView logDisplay;
-    //private Sensor accelerometer;
-    //private long lastTime = 0;
-    //private float lastX, lastY, lastZ;
-    //private static final int THRESHOLD = 600;
+
     TextView coordinates;
     TextView address;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        //Get sensors to be captured
+        // Get sensors to be captured
         sensorTypes.put(Sensor.TYPE_ACCELEROMETER, "ACCEL");
         sensorTypes.put(Sensor.TYPE_GYROSCOPE, "GYRO");
         sensorTypes.put(Sensor.TYPE_LINEAR_ACCELERATION, "LINEAR");
@@ -55,15 +59,18 @@ public class MainActivity extends Activity {
         sensorTypes.put(Sensor.TYPE_ROTATION_VECTOR, "ROTATION");
 
         sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-        for (Integer type : sensorTypes.keySet()){
+        for (Integer type : sensorTypes.keySet()) {
             sensors.put(type, sensorManager.getDefaultSensor(type));
         }
 
-        /*sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-        accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-        sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_NORMAL);*/
+        locationManager = (LocationManager) this
+                .getSystemService(Context.LOCATION_SERVICE);
 
-        findViewById(R.id.button1).setOnClickListener(clickListener);
+        // Register click listeners for buttons
+        findViewById(R.id.toggle).setOnClickListener(clickListener);
+        findViewById(R.id.btnEnter).setOnClickListener(clickListener);
+        findViewById(R.id.btnExit).setOnClickListener(clickListener);
+
         filenameDisplay = (TextView) findViewById(R.id.filename);
         logDisplay = (TextView) findViewById(R.id.log);
 
@@ -105,9 +112,6 @@ public class MainActivity extends Activity {
         stopRecording();
     }
 
-    private void stopRecording() {
-    }
-
     private void startRecording() {
         // Prepare data storage
         File directory = Environment
@@ -126,21 +130,63 @@ public class MainActivity extends Activity {
             sensorManager.registerListener(sensorListener, sensor,
                     SensorManager.SENSOR_DELAY_NORMAL);
         }
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return;
+        }
+        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0,
+                0, locationListener);
+    }
+
+    private void stopRecording() {
+        sensorManager.unregisterListener(sensorListener);
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return;
+        }
+        locationManager.removeUpdates(locationListener);
+        filenameDisplay.setText("");
+        try {
+            file.close();
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
     }
 
     private View.OnClickListener clickListener = new View.OnClickListener() {
+
         @Override
-        public void onClick(View view) {
-            switch (view.getId()) {
-                case R.id.button1:
-                    if (((ToggleButton) view).isChecked()) {
+        public void onClick(View v) {
+            switch (v.getId()) {
+                case R.id.toggle:
+                    if (((ToggleButton) v).isChecked()) {
                         startRecording();
                     } else {
                         stopRecording();
                     }
                     break;
+                case R.id.btnEnter:
+                    write("ENTER");
+                    break;
+                case R.id.btnExit:
+                    write("EXIT");
+                    break;
             }
         }
+
     };
 
     private SensorEventListener sensorListener = new SensorEventListener() {
@@ -155,6 +201,36 @@ public class MainActivity extends Activity {
         }
 
     };
+
+    private LocationListener locationListener = new LocationListener() {
+
+        @Override
+        public void onLocationChanged(Location location) {
+            write("GPS",
+                    new double[] { location.getLatitude(),
+                            location.getLongitude() });
+        }
+
+        @Override
+        public void onProviderDisabled(String provider) {
+        }
+
+        @Override
+        public void onProviderEnabled(String provider) {
+        }
+
+        @Override
+        public void onStatusChanged(String provider, int status, Bundle extras) {
+        }
+
+    };
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.main, menu);
+        return true;
+    }
 
     private void write(String tag, String[] values) {
         if (file == null) {
@@ -199,50 +275,4 @@ public class MainActivity extends Activity {
     private void write(String tag) {
         write(tag, (String[]) null);
     }
-
-    /*@Override
-    public void onSensorChanged(SensorEvent sensorEvent) {
-        Sensor sensor = sensorEvent.sensor;
-        if (sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
-            float x = sensorEvent.values[0];
-            float y = sensorEvent.values[1];
-            float z = sensorEvent.values[2];
-            long currentTime = System.currentTimeMillis();
-            if ((currentTime - lastTime) > 100) {
-                long diffTime = (currentTime - lastTime);
-                lastTime = currentTime;
-                float speed = Math.abs(x + y + z - lastX - lastY - lastZ)/ diffTime * 10000;
-                if (speed > THRESHOLD) {
-                    getRandomNumber();
-                }
-                lastX = x;
-                lastY = y;
-                lastZ = z;
-            }
-        }
-    }
-
-    private void getRandomNumber() {
-        Random randNumber = new Random();
-        int iNumber = randNumber.nextInt(100);
-        TextView text = (TextView)findViewById(R.id.number);
-        text.setText("" + iNumber);
-        RelativeLayout ball = (RelativeLayout) findViewById(R.id.ball);
-        ball.setVisibility(View.INVISIBLE);
-        ball.setVisibility(View.VISIBLE);
-    }
-
-    @Override
-    public void onAccuracyChanged(Sensor sensor, int i) {
-    }
-
-    protected void onPause() {
-        super.onPause();
-        sensorManager.unregisterListener(this);
-    }
-
-    protected void onResume() {
-        super.onResume();
-        sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_NORMAL);
-    }*/
 }
