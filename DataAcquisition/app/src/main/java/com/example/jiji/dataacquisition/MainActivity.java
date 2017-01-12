@@ -19,6 +19,7 @@ import android.support.v4.app.ActivityCompat;
 import android.util.Log;
 import android.view.Menu;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.ToggleButton;
@@ -114,8 +115,9 @@ public class MainActivity extends Activity {
 
     private void startRecording() {
         // Prepare data storage
-        File directory = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS);
-        String name = "GyroData_" + System.currentTimeMillis() + ".csv";
+        File directory = Environment
+                .getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+        String name = "AllData_" + System.currentTimeMillis() + ".csv";
         File filename = new File(directory, name);
         try {
             file = new BufferedWriter(new FileWriter(filename));
@@ -165,7 +167,7 @@ public class MainActivity extends Activity {
         }
     }
 
-    private View.OnClickListener clickListener = new View.OnClickListener() {
+    private OnClickListener clickListener = new OnClickListener() {
 
         @Override
         public void onClick(View v) {
@@ -262,4 +264,17 @@ public class MainActivity extends Activity {
         }
         write(tag, array);
     }
+
+    private void write(String tag, double[] values) {
+        String[] array = new String[values.length];
+        for (int i = 0; i < values.length; i++) {
+            array[i] = Double.toString(values[i]);
+        }
+        write(tag, array);
+    }
+
+    private void write(String tag) {
+        write(tag, (String[]) null);
+    }
+
 }
