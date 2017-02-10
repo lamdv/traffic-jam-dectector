@@ -15,8 +15,16 @@
 *
 *******************************************************************************-->
 <resources>
-    <!-- Default screen margins, per the Android Design guidelines. -->
-    <dimen name="activity_horizontal_margin">16dp</dimen>
-    <dimen name="activity_vertical_margin">16dp</dimen>
-    <dimen name="activity_setting_margin">8dp</dimen>
+
+    <color name="black_overlay">#66000000</color>
+    <color name="actionbar_text">#ffffff</color>
+    <color name="background_main">#3A4A53</color>
+    <color name="background_actionbar">#4E4F50</color>
+    <color name="background_button">#0000FF</color>
+    <color name="transparent">#00000000</color>
+    <color name="white">#FFFFFF</color>
+    <color name="black">#000000</color>
+    <color name="grey">#A8A9AD</color>
+    <color name="red">#FF0000</color>
+
 </resources>
